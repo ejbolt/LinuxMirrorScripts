@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Source and Destination of Rsync
-RSYNCSOURCE=<rsync host, for example: mirror.math.princeton.edu::pub/ubuntu-iso>
-BASEDIR=<Path to mirror directory, example: /srv/mirror/ubuntu-releases>
+RSYNCSOURCE=#<rsync host, for example: mirror.math.princeton.edu::pub/ubuntu-iso>
+BASEDIR=#<Path to mirror directory, example: /srv/mirror/ubuntu-releases>
 
 # use host name in Lockfile name, credit to Debian's ftpsync tool for the idea,
 # as they do the same thing
@@ -12,7 +12,7 @@ LOCK="${BASEDIR}/Archive-Update-in-Progress-${MIRRORNAME}"
 # variables for logging, if you want the script to just print to the screen, you can set LOGPATH="/dev/stdout"
 DAY=$(date | tr -s ' ' | tr ' ' '-' | cut -d '-' -f2,3,4)
 FILENAME=ubuntu-releases-rsync-$DAY.log
-LOGPATH=<Path to log directory>/ubuntu-releases/$FILENAME
+LOGPATH=#<Path to log directory>/ubuntu-releases/$FILENAME
 
 # set rsync bandwidth in KB, 0 means unlimited
 RSYNC_BW=0
