@@ -13,6 +13,7 @@ NOTE: For Debian-based distributions you should look into using 'ftpsync', the r
 
 And as always, feel free to let me know how to improve on the script!  Current todo list stands at:
 
-1. Implement config files to make scripts cleaner.
+1. Implement config files to make scripts cleaner and easier to configure.
+2. Use variables as much as possible to make more configurable.
 2. Better format for logging.
 3. Look into any missing/better flags to use for rsync.
