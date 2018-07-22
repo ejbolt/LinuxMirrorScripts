@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-cd /home/archvsync/log/centos
+cd <Path to Log directory>/centos
 ls -t | tail -n +101 | xargs rm --
