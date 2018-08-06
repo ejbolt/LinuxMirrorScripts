@@ -41,9 +41,6 @@ if [ -d ${BASEDIR} ] ; then
 	echo "Lockfile set for $DAY mirror update" > "$LOGPATH"
 	touch ${LOCK}
 	echo "Beginning stage 1 sync" >> "$LOGPATH"
-	# First Time Sync
-	# rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" ${RSYNCSOURCE} ${BASEDIR}
-	# cron
 	rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 	STAGEONECODE=$?
 	if (( STAGEONECODE != 0 ))
@@ -54,9 +51,6 @@ if [ -d ${BASEDIR} ] ; then
 		n=1
 		until [ $n -ge 10 ]
 		do
-			# First Time Sync
-			# rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" ${RSYNCSOURCE} ${BASEDIR}
-			# cron
 			rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGEONECODE=$?
 			if (( STAGEONECODE == 0 ))
@@ -81,9 +75,6 @@ if [ -d ${BASEDIR} ] ; then
 		echo "Running stage 2 sync"
 	} >> "$LOGPATH"
 
-	# First Time Sync
-	# rsync  -avSHP --stats --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR}
-	# cron
 	rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"	STAGETWOCODE=$?
 
 	if (( STAGETWOCODE != 0 ))
@@ -94,9 +85,6 @@ if [ -d ${BASEDIR} ] ; then
 		n=1
 		until [ $n -ge 10 ]
 		do
-			# First Time Sync
-			# rsync  -avSHP --stats --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR}
-			# cron
 			rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGETWOCODE=$?
 			if (( STAGETWOCODE == 0 ))
