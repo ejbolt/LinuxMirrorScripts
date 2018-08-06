@@ -44,7 +44,7 @@ if [ -d ${BASEDIR} ] ; then
 	# First Time Sync
 	# rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" ${RSYNCSOURCE} ${BASEDIR}
 	# cron
-	rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" --bwlimit=${RSYNC_BW} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 	STAGEONECODE=$?
 	if (( STAGEONECODE != 0 ))
 	then
@@ -57,7 +57,7 @@ if [ -d ${BASEDIR} ] ; then
 			# First Time Sync
 			# rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" ${RSYNCSOURCE} ${BASEDIR}
 			# cron
-			rsync  -avSHP --stats --safe-links --exclude "local" --exclude "isos" --bwlimit=${RSYNC_BW} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGEONECODE=$?
 			if (( STAGEONECODE == 0 ))
 			then
@@ -84,8 +84,7 @@ if [ -d ${BASEDIR} ] ; then
 	# First Time Sync
 	# rsync  -avSHP --stats --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR}
 	# cron
-	rsync  -avSHP --stats --safe-links --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
-	STAGETWOCODE=$?
+	rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"	STAGETWOCODE=$?
 
 	if (( STAGETWOCODE != 0 ))
 	then
@@ -98,7 +97,7 @@ if [ -d ${BASEDIR} ] ; then
 			# First Time Sync
 			# rsync  -avSHP --stats --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR}
 			# cron
-			rsync  -avSHP --stats --safe-links --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync -prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --bwlimit=${RSYNC_BW} --delete --delete-after --delay-updates ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGETWOCODE=$?
 			if (( STAGETWOCODE == 0 ))
 			then
