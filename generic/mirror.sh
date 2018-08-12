@@ -1,22 +1,59 @@
 #!/usr/bin/env bash
 
+DISTRO=
+CONFIGFILE="${DISTRO}-rsync.config"
+
 # List of Ubuntu mirrors and their statuses at https://launchpad.net/ubuntu/+archivemirrors
 # Source and Destination of Rsync
 RSYNCSOURCE=#<rsync host URL>
 BASEDIR=#Path to mirror directory, example: /srv/mirror/<distro>
 
+#mirror user and path to their home directory
+
+USERNAME=
+USERPATH=
+
 # use host name in Lockfile name, credit to Debian's ftpsync tool for the idea,
 # as they do the same thing
 MIRRORNAME=$(hostname -f)
+LOCKFILE="Archive-Update-in-Progress-${MIRRORNAME}"
 LOCK="${BASEDIR}/Archive-Update-in-Progress-${MIRRORNAME}"
 
 # variables for logging, if you want the script to just print to the screen, you can set LOGPATH="/dev/stdout"
 DAY=$(date | tr -s ' ' | tr ' ' '-' | cut -d '-' -f2,3,4)
-FILENAME=ubuntu-rsync-$DAY.log
-LOGPATH=<Path to log directory>/ubuntu/$FILENAME
+FILENAME=${DISTRO}-rsync-$DAY.log
+LOGPATH="${USERPATH}/log/${DISTRO}/${FILENAME}"
 
 # set rsync bandwidth in KB, 0 means unlimited
-RSYNC_BW=0
+BWLIMIT=0
+RSYNC_BW="--bwlimit=${BWLIMIT}"
+
+STAGEONE_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive"
+STAGETWO_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --delete --delete-after"
+
+STAGEONE_EXCLUDE_LIST=( "indices/" "dists/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+STAGEONE_EXCLUDE=""
+
+STAGETWO_EXCLUDE_LIST=("pool/" "project/trace/${MIRRORNAME}" "${LOCKFILE}")
+STAGETWO_EXCLUDE=""
+
+for i in "${STAGEONE_EXCLUDE_LIST[@]}"
+do
+	STAGEONE_EXCLUDE+="--exclude $i"
+	if [[ "$i" != "${STAGEONE_EXCLUDE_LIST[-1]}" ]]
+	then 
+		STAGEONE_EXCLUDE+=" "
+	fi
+done
+
+for i in "${STAGETWO_EXCLUDE_LIST[@]}"
+do
+	STAGETWO_EXCLUDE+="--exclude $i"
+	if [[ "$i" != "${STAGETWO_EXCLUDE_LIST[-1]}" ]]
+	then 
+		STAGETWO_EXCLUDE+=" "
+	fi
+done
 
 # sync is already running, important for initial sync or if there's a massive update,
 # or if you're syncing very often and a sync is larger than normal, the one exception is
@@ -43,8 +80,7 @@ if [ -d ${BASEDIR} ]; then
 	echo "Lockfile set for $DAY mirror update" > "$LOGPATH"
 	touch ${LOCK}
 	echo "Beginning stage 1 sync" >> "$LOGPATH"
-	#rsync -av --partial --delete --delete-after --bwlimit=${RSYNC_BW} --exclude "indices/" --exclude "dists/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
-	rsync -av --recursive --times --links --safe-links --hard-links --stats --progress --bwlimit=${RSYNC_BW} --exclude "indices/" --exclude "dists/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 	STAGEONECODE=$?
 	# save the exit code from rsync and check for errors (!= 0)
 	if (( STAGEONECODE != 0 ))
@@ -56,8 +92,7 @@ if [ -d ${BASEDIR} ]; then
 		n=1	# keep track of how many failures we've had
 		until [ $n -ge 10 ]
 		do
-			#rsync -av --partial --delete --delete-after --bwlimit=${RSYNC_BW} --exclude "indices/" --exclude "dists/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
-			rsync -av --recursive --times --links --safe-links --hard-links --stats --progress --bwlimit=${RSYNC_BW} --exclude "indices/" --exclude "dists/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGEONECODE=$?
 			if (( STAGEONECODE == 0 ))
 			then
@@ -83,10 +118,9 @@ if [ -d ${BASEDIR} ]; then
 		echo "Running stage 2 sync"
 	} >> "$LOGPATH"
 
-	# do stage 2 sync, this includes deleting files, this is done to prevent deletion while someone is downloading from the mirror during a mirror update
-
-	# rsync -av --partial --delete --delete-after --bwlimit=${RSYNC_BW} --exclude "pool/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
-	rsync -av --recursive --times --links --safe-links --hard-links --stats --progress --bwlimit=${RSYNC_BW} --exclude "pool/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" --delete --delete-after ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	# do stage 2 sync, this includes deleting files, this is done to prevent deletion while someone is 
+	# downloading from the mirror during a mirror update
+	rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 	STAGETWOCODE=$?
 	# save rsync error code
 	if (( STAGETWOCODE != 0 ))
@@ -97,8 +131,7 @@ if [ -d ${BASEDIR} ]; then
 		n=1
 		until [ $n -ge 10 ]
 		do
-			# rsync -av --partial --delete --delete-after --bwlimit=${RSYNC_BW} --exclude "pool/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
-			rsync -av --recursive --times --links --safe-links --hard-links --stats --progress --bwlimit=${RSYNC_BW} --exclude "pool/" --exclude "project/trace/${MIRRORNAME}" --exclude "Archive-Update-in-Progress-${MIRRORNAME}" --delete --delete-after ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 			STAGETWOCODE=$?
 			if (( STAGETWOCODE == 0 ))
 			then
