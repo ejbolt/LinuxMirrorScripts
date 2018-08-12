@@ -28,15 +28,21 @@ LOGPATH="${USERPATH}/log/${DISTRO}/${FILENAME}"
 BWLIMIT=0
 RSYNC_BW="--bwlimit=${BWLIMIT}"
 
+# Options for first stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts
 STAGEONE_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive"
+
+# Options for second stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts, deletions should happen here.
 STAGETWO_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --delete --delete-after"
 
-STAGEONE_EXCLUDE_LIST=( "indices/" "dists/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+# recommended files to exclude in 1st stage
+STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
 STAGEONE_EXCLUDE=""
 
-STAGETWO_EXCLUDE_LIST=("pool/" "project/trace/${MIRRORNAME}" "${LOCKFILE}")
+# recommended files to exclude in 2nd stage
+STAGETWO_EXCLUDE_LIST=( "${LOCKFILE}" )
 STAGETWO_EXCLUDE=""
 
+# loops that generate '--exclude' strings
 for i in "${STAGEONE_EXCLUDE_LIST[@]}"
 do
 	STAGEONE_EXCLUDE+="--exclude $i"
