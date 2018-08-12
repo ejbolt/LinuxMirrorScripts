@@ -17,3 +17,5 @@ And as always, feel free to let me know how to improve on the script!  Current t
 2. Use variables as much as possible to make more configurable.
 2. Better format for logging.
 3. Look into any missing/better flags to use for rsync.
+
+Also in the process of creating a script to deploy mirrors using whiptail dialog menus.  Goes hand-in-hand with using config files, as the script will generate a config file and wget the "generic" script and replace variables in the config file with user supplied options (and defaults)
