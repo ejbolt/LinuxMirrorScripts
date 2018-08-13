@@ -5,11 +5,12 @@ CONFIGFILE="${DISTRO}-rsync.config"
 
 # List of Ubuntu mirrors and their statuses at https://launchpad.net/ubuntu/+archivemirrors
 # Source and Destination of Rsync
-RSYNCSOURCE=#<rsync host URL>
-BASEDIR=#Path to mirror directory, example: /srv/mirror/<distro>
+#<rsync host URL>
+RSYNCSOURCE=
+#Path to mirror directory, example: /srv/mirror/<distro>
+BASEDIR=
 
 #mirror user and path to their home directory
-
 USERNAME=
 USERPATH=
 
@@ -21,7 +22,7 @@ LOCK="${BASEDIR}/Archive-Update-in-Progress-${MIRRORNAME}"
 
 # variables for logging, if you want the script to just print to the screen, you can set LOGPATH="/dev/stdout"
 DAY=$(date | tr -s ' ' | tr ' ' '-' | cut -d '-' -f2,3,4)
-FILENAME=${DISTRO}-rsync-$DAY.log
+FILENAME=${DISTRO}-rsync-${DAY}.log
 LOGPATH="${USERPATH}/log/${DISTRO}/${FILENAME}"
 
 # set rsync bandwidth in KB, 0 means unlimited
@@ -29,23 +30,41 @@ BWLIMIT=0
 RSYNC_BW="--bwlimit=${BWLIMIT}"
 
 # Options for first stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts
-STAGEONE_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive"
-
+STAGEONE_DEFAULTS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive"
+STAGEONE_EXTRA=""
+STAGEONE_OPTIONS="${STAGEONE_DEFAULTS} ${STAGEONE_EXTRA}"
 # Options for second stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts, deletions should happen here.
-STAGETWO_OPTIONS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --delete --delete-after"
+STAGETWO_DEFAULTS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --delete --delete-after"
+STAGETWO_EXTRA=""
+STAGETWO_OPTIONS="${STAGETWO_DEFAULTS} ${STAGETWO_EXTRA}"
 
+# Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
 STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
+# can modify if statement to apply to debian and its derivatives but you SHOULD use ftpsync if possible for Debian
+if [[ "${DISTRO}" == "ubuntu" ]]
+then
+	STAGEONE_EXCLUDE_LIST=( "indices/" "dists/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+else
+	STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
+fi
 STAGEONE_EXCLUDE=""
 
 # recommended files to exclude in 2nd stage
-STAGETWO_EXCLUDE_LIST=( "${LOCKFILE}" )
+# can modify if statement to apply to debian and its derivatives but you SHOULD use ftpsync if possible for Debian
+if [[ "${DISTRO}" == "ubuntu" ]]
+then
+	STAGETWO_EXCLUDE_LIST=( "pool/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+else
+	STAGETWO_EXCLUDE_LIST=( "${LOCKFILE}" )
+fi
 STAGETWO_EXCLUDE=""
 
 # loops that generate '--exclude' strings
 for i in "${STAGEONE_EXCLUDE_LIST[@]}"
 do
 	STAGEONE_EXCLUDE+="--exclude $i"
+	#ensure nice spacing format
 	if [[ "$i" != "${STAGEONE_EXCLUDE_LIST[-1]}" ]]
 	then 
 		STAGEONE_EXCLUDE+=" "
@@ -55,6 +74,7 @@ done
 for i in "${STAGETWO_EXCLUDE_LIST[@]}"
 do
 	STAGETWO_EXCLUDE+="--exclude $i"
+	#ensure nice spacing format
 	if [[ "$i" != "${STAGETWO_EXCLUDE_LIST[-1]}" ]]
 	then 
 		STAGETWO_EXCLUDE+=" "
@@ -160,8 +180,10 @@ if [ -d ${BASEDIR} ]; then
 
 	echo "Stage 2 Finished Successfully" >> "$LOGPATH"
 
-	date -u > ${BASEDIR}/project/trace/$(hostname -f)
+	if [[ "${DISTRO}" == "ubuntu" ]]
+	then
+		date -u > ${BASEDIR}/project/trace/$(hostname -f)
+	fi
 else
 	echo "Target directory $BASEDIR not present." >> "$LOGPATH"
 fi
-
