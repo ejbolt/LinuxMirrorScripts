@@ -5,41 +5,7 @@ CONFIGFILE="${DISTRO}-rsync.conf"
 
 HOMEDIR=$(pwd)
 
-. "${HOMEDIR}/${CONFIGFILE}"
-
-# Source and Destination of Rsync
-#<rsync host URL>
-RSYNCSOURCE=
-#Path to mirror directory, example: /var/www/html/${DISTRO}
-BASEDIR=
-
-#mirror user and path to their home directory
-USERNAME=
-USERPATH=
-
-# use host name in Lockfile name, credit to Debian's ftpsync tool for the idea,
-# as they do the same thing
-MIRRORNAME=$(hostname -f)
-LOCKFILE="Archive-Update-in-Progress-${MIRRORNAME}"
-LOCK="${BASEDIR}/Archive-Update-in-Progress-${MIRRORNAME}"
-
-# variables for logging, if you want the script to just print to the screen, you can set LOGPATH="/dev/stdout"
-DAY=$(date | tr -s ' ' | tr ' ' '-' | cut -d '-' -f2,3,4)
-LOGFILENAME="${DISTRO}-rsync-${DAY}.log"
-LOGPATH="${USERPATH}/log/${DISTRO}/${LOGFILENAME}"
-
-# set rsync bandwidth in KB, 0 means unlimited
-BWLIMIT=0
-RSYNC_BW="--bwlimit=${BWLIMIT}"
-
-# Options for first stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts
-STAGEONE_DEFAULTS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive"
-STAGEONE_EXTRA=""
-STAGEONE_OPTIONS="${STAGEONE_DEFAULTS} ${STAGEONE_EXTRA}"
-# Options for second stage sync.  Defaults are known to work and several are included in the Debian rsync tool defaults or ubuntu/centos scripts, deletions should happen here.
-STAGETWO_DEFAULTS="-prltvHSB8192 --safe-links --info=progress2 --chmod=D755,F644 --stats --no-human-readable --no-inc-recursive --delete --delete-after"
-STAGETWO_EXTRA=""
-STAGETWO_OPTIONS="${STAGETWO_DEFAULTS} ${STAGETWO_EXTRA}"
+. "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
@@ -107,7 +73,7 @@ fi
 # make sure your target directory exists
 if [ -d ${BASEDIR} ]; then
 	echo "Lockfile set for $DAY mirror update" > "${LOGPATH}"
-	touch ${LOCK}
+	touch "${LOCK}"
 	echo "Beginning stage 1 sync" >> "${LOGPATH}"
 	rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 	STAGEONECODE=$?
@@ -190,4 +156,3 @@ if [ -d ${BASEDIR} ]; then
 else
 	echo "Target directory $BASEDIR not present." >> "${LOGPATH}"
 fi
-
