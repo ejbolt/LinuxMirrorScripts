@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
 DISTRO=
-CONFIGFILE="${DISTRO}-rsync.config"
+CONFIGFILE="${DISTRO}-rsync.conf"
 
-# List of Ubuntu mirrors and their statuses at https://launchpad.net/ubuntu/+archivemirrors
+HOMEDIR=$(pwd)
+
+. "${HOMEDIR}/${CONFIGFILE}"
+
 # Source and Destination of Rsync
 #<rsync host URL>
 RSYNCSOURCE=
-#Path to mirror directory, example: /srv/mirror/<distro>
+#Path to mirror directory, example: /var/www/html/${DISTRO}
 BASEDIR=
 
 #mirror user and path to their home directory
@@ -22,8 +25,8 @@ LOCK="${BASEDIR}/Archive-Update-in-Progress-${MIRRORNAME}"
 
 # variables for logging, if you want the script to just print to the screen, you can set LOGPATH="/dev/stdout"
 DAY=$(date | tr -s ' ' | tr ' ' '-' | cut -d '-' -f2,3,4)
-FILENAME=${DISTRO}-rsync-${DAY}.log
-LOGPATH="${USERPATH}/log/${DISTRO}/${FILENAME}"
+LOGFILENAME="${DISTRO}-rsync-${DAY}.log"
+LOGPATH="${USERPATH}/log/${DISTRO}/${LOGFILENAME}"
 
 # set rsync bandwidth in KB, 0 means unlimited
 BWLIMIT=0
@@ -90,43 +93,43 @@ function cleanup {
 	if (( $EXITCODE != 5 ))
 	then
 		rm -f ${LOCK}
-		echo "Lockfile removed" >> "$LOGPATH"
+		echo "Lockfile removed" >> "${LOGPATH}"
 		dos2unix ${LOGPATH}
 	fi
 }
 trap cleanup EXIT
 
 if [ -f ${LOCK} ]; then
-	echo "Updates via rsync already running. $DAY" > "$LOGPATH"
+	echo "Updates via rsync already running. $DAY" > "${LOGPATH}"
 	exit 5
 fi
 
 # make sure your target directory exists
 if [ -d ${BASEDIR} ]; then
-	echo "Lockfile set for $DAY mirror update" > "$LOGPATH"
+	echo "Lockfile set for $DAY mirror update" > "${LOGPATH}"
 	touch ${LOCK}
-	echo "Beginning stage 1 sync" >> "$LOGPATH"
-	rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	echo "Beginning stage 1 sync" >> "${LOGPATH}"
+	rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 	STAGEONECODE=$?
 	# save the exit code from rsync and check for errors (!= 0)
 	if (( STAGEONECODE != 0 ))
 	then
 		# sleep for 6-12 minutes
 		NAPTIME=$(( RANDOM % 6 + 6 ))
-		echo "Stage 1 failed on first attempt, sleeping for $NAPTIME minutes and entering loop" >> "$LOGPATH"
+		echo "Stage 1 failed on first attempt, sleeping for $NAPTIME minutes and entering loop" >> "${LOGPATH}"
 		sleep $(( NAPTIME ))m
 		n=1	# keep track of how many failures we've had
 		until [ $n -ge 10 ]
 		do
-			rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 			STAGEONECODE=$?
 			if (( STAGEONECODE == 0 ))
 			then
-				echo "Stage 1 finished after $n retries" >> "$LOGPATH"
+				echo "Stage 1 finished after $n retries" >> "${LOGPATH}"
 				break
 			else
 				NAPTIME=$(( RANDOM % 6 + 6 ))
-				echo "Stage 1 failed, sleeping for $NAPTIME minutes" >> "$LOGPATH"
+				echo "Stage 1 failed, sleeping for $NAPTIME minutes" >> "${LOGPATH}"
 				sleep $(( NAPTIME ))m
 			fi
 			n=$(($n+1))
@@ -134,7 +137,7 @@ if [ -d ${BASEDIR} ]; then
 		# quit after 10 times, if it still failed, report the number of failures (always 10 at this point), and exit
 		if (( STAGEONECODE != 0 ))
 		then
-			echo "Stage 1 Failed after $n retries." >> "$LOGPATH"
+			echo "Stage 1 Failed after $n retries." >> "${LOGPATH}"
 			exit 1
 		fi
 	fi
@@ -142,30 +145,30 @@ if [ -d ${BASEDIR} ]; then
 	{
 		echo "Stage 1 Finished Successfully"
 		echo "Running stage 2 sync"
-	} >> "$LOGPATH"
+	} >> "${LOGPATH}"
 
 	# do stage 2 sync, this includes deleting files, this is done to prevent deletion while someone is 
 	# downloading from the mirror during a mirror update
-	rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 	STAGETWOCODE=$?
 	# save rsync error code
 	if (( STAGETWOCODE != 0 ))
 	then
 		NAPTIME=$(( RANDOM % 6 + 6 ))
-		echo "Stage 2 failed on first try, sleeping for $NAPTIME minutes and entering loop" >> "$LOGPATH"
+		echo "Stage 2 failed on first try, sleeping for $NAPTIME minutes and entering loop" >> "${LOGPATH}"
 		sleep $(( NAPTIME ))m
 		n=1
 		until [ $n -ge 10 ]
 		do
-			rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+			rsync ${STAGETWO_OPTIONS} ${RSYNC_BW} ${STAGETWO_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 			STAGETWOCODE=$?
 			if (( STAGETWOCODE == 0 ))
 			then
-				echo "Stage 2 finished after $n retries" >> "$LOGPATH"
+				echo "Stage 2 finished after $n retries" >> "${LOGPATH}"
 				break
 			else
 				NAPTIME=$(( RANDOM % 6 + 6 ))
-				echo "Stage 2 failed, sleeping for $NAPTIME minutes" >> "$LOGPATH"
+				echo "Stage 2 failed, sleeping for $NAPTIME minutes" >> "${LOGPATH}"
 				sleep $(( NAPTIME ))m
 
 			fi
@@ -173,17 +176,18 @@ if [ -d ${BASEDIR} ]; then
 		done
 		if (( STAGETWOCODE != 0 ))
 		then
-			echo "Stage 2 Failed after $n retries." >> "$LOGPATH"
+			echo "Stage 2 Failed after $n retries." >> "${LOGPATH}"
 			exit 1
 		fi
 	fi
 
-	echo "Stage 2 Finished Successfully" >> "$LOGPATH"
+	echo "Stage 2 Finished Successfully" >> "${LOGPATH}"
 
 	if [[ "${DISTRO}" == "ubuntu" ]]
 	then
 		date -u > ${BASEDIR}/project/trace/$(hostname -f)
 	fi
 else
-	echo "Target directory $BASEDIR not present." >> "$LOGPATH"
+	echo "Target directory $BASEDIR not present." >> "${LOGPATH}"
 fi
+
