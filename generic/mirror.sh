@@ -5,7 +5,7 @@ CONFIGFILE="${DISTRO}-rsync.conf"
 
 HOMEDIR=$(pwd)
 
-. "${HOMEDIR}/${CONFIGFILE}"
+. "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
 # Source and Destination of Rsync
 #<rsync host URL>
