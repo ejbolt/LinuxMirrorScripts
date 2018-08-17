@@ -5,7 +5,7 @@ CONFIGFILE="${DISTRO}-rsync.conf"
 
 HOMEDIR=$(pwd)
 
-. "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
+. "${HOMEDIR}/${CONFIGFILE}"
 
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
