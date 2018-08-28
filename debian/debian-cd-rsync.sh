@@ -39,7 +39,7 @@ if [ -d ${BASEDIR} ] ; then
 	echo "Setting lockfile for $DAY cd update" > "$LOGPATH"
 	touch ${LOCK}
 	echo "Running Debian CD sync" >> "$LOGPATH"
-	rsync -avSHP --times --links --hard-links --partial --bwlimit=${RSYNC_BW} --block-size=8192 ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+	rsync -avSHP --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
 	SYNCCODE=$?
 	# save the exit code from rsync and check for errors (!= 0)
 	if (( SYNCCODE != 0 ))
@@ -50,7 +50,7 @@ if [ -d ${BASEDIR} ] ; then
 		n=1 # keep track of how many failures we've had
 		until [ $n -ge 10 ]
 		do
-			rsync -avSHP --times --links --hard-links --partial --bwlimit=${RSYNC_BW} --block-size=8192 ${RSYNCSOURCE} ${BASEDIR}
+			rsync -avSHP --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 ${RSYNCSOURCE} ${BASEDIR}
 			SYNCCODE=$?
 			if (( SYNCCODE == 0 ))
 			then
