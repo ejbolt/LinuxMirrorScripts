@@ -44,7 +44,7 @@ if [ -d ${BASEDIR} ] ; then
         echo "Setting lockfile for $DAY cd update" > "$LOGPATH"
         touch ${LOCK}
         echo "Running ${DISTRONAME} CD sync" >> "$LOGPATH"
-        rsync -amvSHP --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 --include="*/" --include="*.iso" --exclude="*" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
+        rsync -amvSH --progress --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 --include="*/" --include="*.iso" --exclude="*" ${RSYNCSOURCE} ${BASEDIR} >> "$LOGPATH"
         SYNCCODE=$?
         # save the exit code from rsync and check for errors (!= 0)
         if (( SYNCCODE != 0 ))
@@ -55,7 +55,7 @@ if [ -d ${BASEDIR} ] ; then
                 n=1 # keep track of how many failures we've had
                 until [ $n -ge 10 ]
                 do
-                        rsync -amvSHP --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 include="*/" --include="*.iso" --exclude="*" ${RSYNCSOURCE} ${BASEDIR}
+                        rsync -amvSH --progress --times --links --hard-links --bwlimit=${RSYNC_BW} --block-size=8192 include="*/" --include="*.iso" --exclude="*" ${RSYNCSOURCE} ${BASEDIR}
                         SYNCCODE=$?
                         if (( SYNCCODE == 0 ))
                         then
