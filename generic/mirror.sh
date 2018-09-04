@@ -3,7 +3,7 @@
 DISTRO=
 CONFIGFILE="${DISTRO}-rsync.conf"
 
-HOMEDIR=$(pwd)
+HOMEDIR=
 
 . "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
