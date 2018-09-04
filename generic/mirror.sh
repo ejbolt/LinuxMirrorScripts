@@ -3,7 +3,7 @@
 DISTRO=
 CONFIGFILE="${DISTRO}-rsync.conf"
 
-HOMEDIR=
+HOMEDIR=$(cat /etc/passwd | grep $(whoami) | cut -d ':' -f6)
 
 . "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
