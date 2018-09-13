@@ -1,5 +1,7 @@
 # LinuxMirrorScripts
 Scripts used for creating and maintaining Linux mirrors.
+Automated solution using some of these scripts is available at https://github.com/ejbolt/mirror-deploy.
+That method is recommended, as it will deploy scripts with config files with your desired options, and you can add to them to your heart's content.
 
 Some distros, like CentOS and Ubuntu have their own scripts, and these scripts are tested and work well.  They are based on example rsync commands given by the organizations that own the distros, and improved upon during the creation of mirrors for a university.  They also drew inspiration from the 'ftpsync' tool used by the folks at Debian, which is very robust.  I highly recommend looking at it.  It's a 800-ish line bash script, so can be a bit daunting, but it is a very powerful tool.
 
