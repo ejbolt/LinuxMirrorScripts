@@ -154,5 +154,5 @@ if [ -d ${BASEDIR} ]; then
 		date -u > ${BASEDIR}/project/trace/$(hostname -f)
 	fi
 else
-	echo "Target directory $BASEDIR not present." >> "${LOGPATH}"
+	echo "Target directory ${BASEDIR} not present." >> "${LOGPATH}"
 fi
