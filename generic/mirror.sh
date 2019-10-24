@@ -66,6 +66,7 @@ function cleanup {
 	fi
 }
 trap cleanup EXIT
+trap cleanup ERR
 
 if [ -f ${LOCK} ]; then
 	echo "Updates via rsync already running. $DAY" > "${LOGPATH}"
