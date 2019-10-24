@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -E
 
 DISTRO=
 CONFIGFILE="${DISTRO}-rsync.conf"
