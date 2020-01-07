@@ -57,13 +57,9 @@ done
 # when we are running the script and it is already running, i.e, the lockfile exists.
 # We should leave it alone and gracefully exit then
 function cleanup {
-	EXITCODE=$?
-	if (( $EXITCODE != 5 ))
-	then
-		rm -f ${LOCK}
-		echo "Lockfile removed" >> "${LOGPATH}"
-		dos2unix ${LOGPATH}
-	fi
+	rm -f ${LOCK}
+	echo "Lockfile removed" >> "${LOGPATH}"
+	dos2unix ${LOGPATH}
 }
 trap cleanup EXIT ERR
 
