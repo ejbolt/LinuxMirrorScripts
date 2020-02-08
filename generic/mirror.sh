@@ -9,6 +9,20 @@ HOMEDIR=$(cat /etc/passwd | grep $(whoami) | cut -d ':' -f6)
 
 . "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
+# sync is already running, important for initial sync or if there's a massive update,
+# or if you're syncing very often and a sync is larger than normal, the one exception is
+# when we are running the script and it is already running, i.e, the lockfile exists.
+# We should leave it alone and gracefully exit then
+function cleanup
+{
+    if [ $? -ne 5 ]
+    then
+        rm "${LOCK}"
+    fi
+}
+exec 99>"${LOCK}" || exit 5
+flock -x -n 99 || (echo "Updates via rsync are already running. ${DAY}" >> "${LOGPATH}"; exit 5)
+
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
 STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
@@ -52,26 +66,8 @@ do
 	fi
 done
 
-# sync is already running, important for initial sync or if there's a massive update,
-# or if you're syncing very often and a sync is larger than normal, the one exception is
-# when we are running the script and it is already running, i.e, the lockfile exists.
-# We should leave it alone and gracefully exit then
-function cleanup {
-	rm -f ${LOCK}
-	echo "Lockfile removed" >> "${LOGPATH}"
-	dos2unix ${LOGPATH}
-}
-trap cleanup EXIT ERR
-
-if [ -f ${LOCK} ]; then
-	echo "Updates via rsync already running. $DAY" > "${LOGPATH}"
-	exit 5
-fi
-
 # make sure your target directory exists
 if [ -d ${BASEDIR} ]; then
-	echo "Lockfile set for $DAY mirror update" > "${LOGPATH}"
-	touch "${LOCK}"
 	echo "Beginning stage 1 sync" >> "${LOGPATH}"
 	rsync ${STAGEONE_OPTIONS} ${RSYNC_BW} ${STAGEONE_EXCLUDE} ${RSYNCSOURCE} ${BASEDIR} >> "${LOGPATH}"
 	STAGEONECODE=$?
