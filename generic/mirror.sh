@@ -21,7 +21,7 @@ function cleanup
     fi
 }
 exec 99>"${LOCK}" || exit 5
-flock -x -n 99 || (echo "Updates via rsync are already running. ${DAY}" >> "${LOGPATH}"; exit 5)
+(flock -x -n 99 && "Creating lock for ${DISTRO}") || (echo "Updates via rsync are already running. ${DAY}" >> "${LOGPATH}"; exit 5)
 trap cleanup EXIT
 
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
