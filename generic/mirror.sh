@@ -11,7 +11,7 @@ HOMEDIR=$(cat /etc/passwd | grep $(whoami) | cut -d ':' -f6)
 
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
-STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
+STAGEONE_EXCLUDE_LIST=( )
 # can modify if statement to apply to debian and its derivatives but you SHOULD use ftpsync if possible for Debian
 if [[ "${DISTRO}" == "ubuntu" ]]
 then
