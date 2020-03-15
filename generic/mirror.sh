@@ -9,30 +9,15 @@ HOMEDIR=$(cat /etc/passwd | grep $(whoami) | cut -d ':' -f6)
 
 . "${HOMEDIR}/${DISTRO}/${CONFIGFILE}"
 
-# sync is already running, important for initial sync or if there's a massive update,
-# or if you're syncing very often and a sync is larger than normal, the one exception is
-# when we are running the script and it is already running, i.e, the lockfile exists.
-# We should leave it alone and gracefully exit then
-function cleanup
-{
-    if [ $? -ne 5 ]
-    then
-        rm "${LOCK}"
-    fi
-}
-exec 99>"${LOCK}" || exit 5
-(flock -x -n 99 && "Creating lock for ${DISTRO}") || (echo "Updates via rsync are already running. ${DAY}" >> "${LOGPATH}"; exit 5)
-trap cleanup EXIT
-
 # Note: files/dirs to exclude are dependent on distro flavors.  Debian-based are similar, RedHat based are similar.  Look in to the distro when choosing
 # recommended files to exclude in 1st stage
 STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
 # can modify if statement to apply to debian and its derivatives but you SHOULD use ftpsync if possible for Debian
 if [[ "${DISTRO}" == "ubuntu" ]]
 then
-	STAGEONE_EXCLUDE_LIST=( "indices/" "dists/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+	STAGEONE_EXCLUDE_LIST=( "indices/" "dists/" "project/trace/${MIRRORNAME}" )
 else
-	STAGEONE_EXCLUDE_LIST=( "${LOCKFILE}" )
+	STAGEONE_EXCLUDE_LIST=( )
 fi
 STAGEONE_EXCLUDE=""
 
@@ -40,9 +25,9 @@ STAGEONE_EXCLUDE=""
 # can modify if statement to apply to debian and its derivatives but you SHOULD use ftpsync if possible for Debian
 if [[ "${DISTRO}" == "ubuntu" ]]
 then
-	STAGETWO_EXCLUDE_LIST=( "pool/" "project/trace/${MIRRORNAME}" "${LOCKFILE}" )
+	STAGETWO_EXCLUDE_LIST=( "pool/" "project/trace/${MIRRORNAME}" )
 else
-	STAGETWO_EXCLUDE_LIST=( "${LOCKFILE}" )
+	STAGETWO_EXCLUDE_LIST=( )
 fi
 STAGETWO_EXCLUDE=""
 
